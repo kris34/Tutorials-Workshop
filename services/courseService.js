@@ -12,8 +12,12 @@ async function getRecent() {
   return await Course.find({}).sort({ userCount: -1 }).limit(3).lean();
 }
 
+async function getById(id) {
+  return Course.findById(id).lean();
+}
 module.exports = {
   getAllbyDate,
   createCourse,
   getRecent,
+  getById
 };
