@@ -4,6 +4,7 @@ const {
   getById,
   deleteById,
   updateById,
+  enrollUser,
 } = require('../services/courseService');
 const { parseError } = require('../util/parser');
 
@@ -17,8 +18,12 @@ courseController.get('/create', (req, res) => {
 
 courseController.get('/:id', async (req, res) => {
   const course = await getById(req.params.id);
-
+  
   course.isOwner = course.owner.toString() == req.user._id.toString();
+
+  course.enrolled = course.users
+    .map((x) => x.toString()).includes(req.user._id.toString())
+    
 
   res.render('details', {
     title: course.title,
@@ -81,7 +86,7 @@ courseController.post('/:id/edit', async (req, res) => {
   try {
     await updateById(req.params.id, req.body);
 
-    res.redirect("/");
+    res.redirect('/');
   } catch (error) {
     res.render('edit', {
       title: 'Edit Course',
@@ -91,4 +96,17 @@ courseController.post('/:id/edit', async (req, res) => {
   }
 });
 
+courseController.get('/:id/enroll', async (req, res) => {
+  const course = await getById(req.params.id);
+
+  if (
+    course.owner.toString() != req.user._id.toString() &&
+    course.users.map((x) => x.toString()).includes(req.user._id.toString()) ==
+      false
+  ) {
+    await enrollUser(req.params.id, req.user._id);
+  }
+
+  res.redirect('/');
+});
 module.exports = courseController;
