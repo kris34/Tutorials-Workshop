@@ -15,9 +15,30 @@ async function getRecent() {
 async function getById(id) {
   return Course.findById(id).lean();
 }
+
+async function deleteById(id) {
+  return  Course.findByIdAndDelete(id);
+}
+
+async function updateById(id, data){ 
+  let existing = await Course.findById(id)
+  existing.title = data.title
+  existing.description = data.description
+  existing.imageUrl = data.imageUrl
+  existing.duration = data.duration
+
+  return existing.save()
+}
+
+async function enrollUser(){ 
+  
+}
+
 module.exports = {
   getAllbyDate,
   createCourse,
   getRecent,
-  getById
+  getById,
+  deleteById,
+  updateById
 };

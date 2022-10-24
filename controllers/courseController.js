@@ -1,5 +1,10 @@
 const { body } = require('express-validator');
-const { createCourse, getById } = require('../services/courseService');
+const {
+  createCourse,
+  getById,
+  deleteById,
+  updateById,
+} = require('../services/courseService');
 const { parseError } = require('../util/parser');
 
 const courseController = require('express').Router();
@@ -21,6 +26,17 @@ courseController.get('/:id', async (req, res) => {
   });
 });
 
+courseController.get('/:id/delete', async (req, res) => {
+  const course = await getById(req.params.id);
+
+  if (course.owner.toString() != req.user._id.toString()) {
+    return res.redirect('/auth/login');
+  }
+
+  await deleteById(req.params.id);
+  res.redirect('/');
+});
+
 courseController.post('/create', async (req, res) => {
   const course = {
     title: req.body.title,
@@ -39,6 +55,38 @@ courseController.post('/create', async (req, res) => {
       title: 'Create Course',
       errors: parseError(err),
       body: req.body,
+    });
+  }
+});
+
+courseController.get('/:id/edit', async (req, res) => {
+  const course = await getById(req.params.id);
+
+  if (course.owner.toString() != req.user._id.toString()) {
+    return res.redirect('/auth/login');
+  }
+
+  res.render('edit', {
+    title: 'Edit Course',
+    course,
+  });
+});
+
+courseController.post('/:id/edit', async (req, res) => {
+  const course = await getById(req.params.id);
+
+  if (course.owner.toString() != req.user._id.toString()) {
+    return res.redirect('/auth/login');
+  }
+  try {
+    await updateById(req.params.id, req.body);
+
+    res.redirect("/");
+  } catch (error) {
+    res.render('edit', {
+      title: 'Edit Course',
+      errors: parseError(error),
+      course: req.body,
     });
   }
 });
